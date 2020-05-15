@@ -39,7 +39,7 @@ class FileLogger {
     file.writeAsString(content, mode: FileMode.append);
   }
 
-  Future<bool> sendLog(String destPath, String destFileName, {bool clearLogs = true}) async {
+  Future<bool> sendLog(String account, String ftp_address, int port, String destPath, String destFileName, {bool clearLogs = true}) async {
     var path = await _localPath;
     var logFile = File('$path/$_logFileName');
 
@@ -47,9 +47,9 @@ class FileLogger {
     var sendFile = await logFile.copy('$path/$destFileName');
 
     var client = new SSHClient(
-      host: '60.251.229.49',
-      port: 22,
-      username: 'yoshi',
+      host: ftp_address,
+      port: port,
+      username: account,
       passwordOrKey: {
         'privateKey': _privateKey,
       },
