@@ -1,4 +1,4 @@
-# filelogger
+# file logger
 
 Flutter package to log to file and send logs via sftp
 
