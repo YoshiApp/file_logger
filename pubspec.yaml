@@ -5,14 +5,16 @@ author:
 homepage:
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.13.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  path_provider: ^1.6.8
-  ssh: ^0.0.6
-  intl: 0.16.1
+  path_provider: ^2.0.11
+  ssh2: ^2.2.3
+#  ssh:
+#    path: /Volumes/External/FlutterProjects/flutter_ssh
+  intl: ^0.17.0
 
 dev_dependencies:
   flutter_test:

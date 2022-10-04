@@ -4,15 +4,14 @@ import 'dart:io';
 
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:ssh/ssh.dart';
+import 'package:ssh2/ssh2.dart';
 
 class FileLogger {
-
   static final FileLogger instance = FileLogger._privateConstructor();
 
   FileLogger._privateConstructor();
 
-  String _privateKey;
+  String _privateKey = '';
   String _logFileName = 'file_logger.txt';
   String _toPath = '';
 
@@ -31,15 +30,17 @@ class FileLogger {
     _privateKey = key;
   }
 
-  void log(String tag, String message) async {
+  Future<void> log(String tag, String message) async {
     final file = await _localFile;
 
-    String time = DateTime.now().toUtc().toIso8601String();
+    String time = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
     String content = '$time  $tag  $message\n';
-    file.writeAsString(content, mode: FileMode.append);
+    await file.writeAsString(content, mode: FileMode.append);
   }
 
-  Future<bool> sendLog(String account, String ftp_address, int port, String destPath, String destFileName, {bool clearLogs = true}) async {
+  Future<bool?> sendLog(String account, String ftpAddress, int port,
+      String destPath, String destFileName,
+      {bool clearLogs = true}) async {
     var path = await _localPath;
     var logFile = File('$path/$_logFileName');
 
@@ -47,7 +48,7 @@ class FileLogger {
     var sendFile = await logFile.copy('$path/$destFileName');
 
     var client = new SSHClient(
-      host: ftp_address,
+      host: ftpAddress,
       port: port,
       username: account,
       passwordOrKey: {
@@ -55,17 +56,30 @@ class FileLogger {
       },
     );
 
-    await client.connect();
-    await client.connectSFTP();
-    String result = await client.sftpUpload(path: sendFile.path, toPath: destPath);
-    if (result == 'upload_success') {
-      sendFile.delete();
-      if (clearLogs) {
-        logFile.writeAsString('');
+    try {
+      String? result = await client.connect();
+      // print(result);
+      if (result == 'session_connected') {
+        String? result = await client.connectSFTP();
+        // print(result);
+        if (result == 'sftp_connected') {
+          String? result =
+              await client.sftpUpload(path: sendFile.path, toPath: destPath);
+          print(result);
+          if (result == 'upload_success') {
+            sendFile.delete();
+            if (clearLogs) {
+              logFile.writeAsString('');
+            }
+            return true;
+          } else {
+            sendFile.delete();
+            return false;
+          }
+        }
       }
-      return true;
-    } else {
-      sendFile.delete();
+    } catch (e) {
+      // print('Error: ${e.code}\nError Message: ${e.message}');
       return false;
     }
   }
